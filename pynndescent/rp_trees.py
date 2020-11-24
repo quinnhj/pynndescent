@@ -856,6 +856,7 @@ def make_sparse_tree(inds, indptr, spdata, rng_state, leaf_size=30, angular=Fals
         "dim": numba.types.uint16,
         "d": numba.types.uint16,
     },
+    nogil=True
 )
 def select_side(hyperplane, offset, point, rng_state):
     margin = offset
@@ -888,6 +889,7 @@ def select_side(hyperplane, offset, point, rng_state):
         ),
     ],
     locals={"node": numba.types.uint32, "side": numba.types.boolean},
+    nogil=True
 )
 def search_flat_tree(point, hyperplanes, offsets, children, indices, rng_state):
     node = 0
@@ -901,7 +903,7 @@ def search_flat_tree(point, hyperplanes, offsets, children, indices, rng_state):
     return indices[-children[node, 0] : -children[node, 1]]
 
 
-@numba.njit(fastmath=True)
+@numba.njit(fastmath=True, nogil=True)
 def sparse_select_side(hyperplane, offset, point_inds, point_data, rng_state):
     margin = offset
 
@@ -929,7 +931,7 @@ def sparse_select_side(hyperplane, offset, point_inds, point_data, rng_state):
         return 1
 
 
-@numba.njit(locals={"node": numba.types.uint32})
+@numba.njit(locals={"node": numba.types.uint32}, nogil=True)
 def search_sparse_flat_tree(
     point_inds, point_data, hyperplanes, offsets, children, indices, rng_state
 ):
@@ -1043,7 +1045,7 @@ def rptree_leaf_array(rp_forest):
         return np.array([[-1]])
 
 
-@numba.njit()
+@numba.njit(nogil=True)
 def recursive_convert(
     tree, hyperplanes, offsets, children, indices, node_num, leaf_start, tree_node
 ):
@@ -1083,7 +1085,7 @@ def recursive_convert(
         return node_num, leaf_start
 
 
-@numba.njit()
+@numba.njit(nogil=True)
 def recursive_convert_sparse(
     tree, hyperplanes, offsets, children, indices, node_num, leaf_start, tree_node
 ):
@@ -1125,7 +1127,7 @@ def recursive_convert_sparse(
         return node_num, leaf_start
 
 
-@numba.njit()
+@numba.njit(nogil=True)
 def num_nodes_and_leaves(tree):
     n_nodes = 0
     n_leaves = 0
@@ -1139,7 +1141,7 @@ def num_nodes_and_leaves(tree):
     return n_nodes, n_leaves
 
 
-@numba.njit()
+@numba.njit(nogil=True)
 def dense_hyperplane_dim(hyperplanes):
     for i in range(len(hyperplanes)):
         if hyperplanes[i].shape[0] > 1:
@@ -1148,7 +1150,7 @@ def dense_hyperplane_dim(hyperplanes):
     raise ValueError("No hyperplanes of adequate size were found!")
 
 
-@numba.njit()
+@numba.njit(nogil=True)
 def sparse_hyperplane_dim(hyperplanes):
     max_dim = 0
     for i in range(len(hyperplanes)):
@@ -1227,6 +1229,7 @@ def renumbaify_tree(tree):
         "result": numba.float32,
         "i": numba.uint32,
     },
+    nogil=True
 )
 def score_tree(tree, neighbor_indices, data, rng_state):
     result = 0.0

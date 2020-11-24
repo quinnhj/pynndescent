@@ -22,7 +22,7 @@ FLOAT32_EPS = np.finfo(np.float32).eps
 FLOAT32_MAX = np.finfo(np.float32).max
 
 
-@numba.njit(fastmath=True, cache=True)
+@numba.njit(fastmath=True, cache=True, nogil=True)
 def euclidean(x, y):
     r"""Standard euclidean distance.
 
@@ -50,6 +50,7 @@ def euclidean(x, y):
         "dim": numba.types.uint32,
         "i": numba.types.uint16,
     },
+    nogil=True
 )
 def squared_euclidean(x, y):
     r"""Squared euclidean distance.
@@ -66,7 +67,7 @@ def squared_euclidean(x, y):
     return result
 
 
-@numba.njit(fastmath=True, cache=True)
+@numba.njit(fastmath=True, cache=True, nogil=True)
 def standardised_euclidean(x, y, sigma=_mock_ones):
     r"""Euclidean distance standardised against a vector of standard
     deviations per coordinate.
@@ -81,7 +82,7 @@ def standardised_euclidean(x, y, sigma=_mock_ones):
     return np.sqrt(result)
 
 
-@numba.njit(fastmath=True, cache=True)
+@numba.njit(fastmath=True, cache=True, nogil=True)
 def manhattan(x, y):
     r"""Manhattan, taxicab, or l1 distance.
 
@@ -95,7 +96,7 @@ def manhattan(x, y):
     return result
 
 
-@numba.njit(fastmath=True, cache=True)
+@numba.njit(fastmath=True, cache=True, nogil=True)
 def chebyshev(x, y):
     r"""Chebyshev or l-infinity distance.
 
@@ -109,7 +110,7 @@ def chebyshev(x, y):
     return result
 
 
-@numba.njit(fastmath=True, cache=True)
+@numba.njit(fastmath=True, cache=True, nogil=True)
 def minkowski(x, y, p=2):
     r"""Minkowski distance.
 
@@ -128,7 +129,7 @@ def minkowski(x, y, p=2):
     return result ** (1.0 / p)
 
 
-@numba.njit(fastmath=True, cache=True)
+@numba.njit(fastmath=True, cache=True, nogil=True)
 def weighted_minkowski(x, y, w=_mock_ones, p=2):
     r"""A weighted version of Minkowski distance.
 
@@ -146,7 +147,7 @@ def weighted_minkowski(x, y, w=_mock_ones, p=2):
     return result ** (1.0 / p)
 
 
-@numba.njit(fastmath=True, cache=True)
+@numba.njit(fastmath=True, cache=True, nogil=True)
 def mahalanobis(x, y, vinv=_mock_identity):
     result = 0.0
 
@@ -164,7 +165,7 @@ def mahalanobis(x, y, vinv=_mock_identity):
     return np.sqrt(result)
 
 
-@numba.njit(fastmath=True, cache=True)
+@numba.njit(fastmath=True, cache=True, nogil=True)
 def hamming(x, y):
     result = 0.0
     for i in range(x.shape[0]):
@@ -174,7 +175,7 @@ def hamming(x, y):
     return float(result) / x.shape[0]
 
 
-@numba.njit(fastmath=True, cache=True)
+@numba.njit(fastmath=True, cache=True, nogil=True)
 def canberra(x, y):
     result = 0.0
     for i in range(x.shape[0]):
@@ -185,7 +186,7 @@ def canberra(x, y):
     return result
 
 
-@numba.njit(fastmath=True, cache=True)
+@numba.njit(fastmath=True, cache=True, nogil=True)
 def bray_curtis(x, y):
     numerator = 0.0
     denominator = 0.0
@@ -199,7 +200,7 @@ def bray_curtis(x, y):
         return 0.0
 
 
-@numba.njit(fastmath=True, cache=True)
+@numba.njit(fastmath=True, cache=True, nogil=True)
 def jaccard(x, y):
     num_non_zero = 0.0
     num_equal = 0.0
@@ -233,6 +234,7 @@ def jaccard(x, y):
         "dim": numba.types.uint32,
         "i": numba.types.uint16,
     },
+    nogil=True
 )
 def alternative_jaccard(x, y):
     num_non_zero = 0.0
@@ -250,12 +252,12 @@ def alternative_jaccard(x, y):
         return -np.log2(num_equal / num_non_zero)
 
 
-@numba.vectorize(fastmath=True)
+@numba.vectorize(fastmath=True, nogil=True)
 def correct_alternative_jaccard(v):
     return 1.0 - pow(2.0, -v)
 
 
-@numba.njit(fastmath=True, cache=True)
+@numba.njit(fastmath=True, cache=True, nogil=True)
 def matching(x, y):
     num_not_equal = 0.0
     for i in range(x.shape[0]):
@@ -266,7 +268,7 @@ def matching(x, y):
     return float(num_not_equal) / x.shape[0]
 
 
-@numba.njit(fastmath=True, cache=True)
+@numba.njit(fastmath=True, cache=True, nogil=True)
 def dice(x, y):
     num_true_true = 0.0
     num_not_equal = 0.0
@@ -282,7 +284,7 @@ def dice(x, y):
         return num_not_equal / (2.0 * num_true_true + num_not_equal)
 
 
-@numba.njit(fastmath=True, cache=True)
+@numba.njit(fastmath=True, cache=True, nogil=True)
 def kulsinski(x, y):
     num_true_true = 0.0
     num_not_equal = 0.0
@@ -300,7 +302,7 @@ def kulsinski(x, y):
         )
 
 
-@numba.njit(fastmath=True, cache=True)
+@numba.njit(fastmath=True, cache=True, nogil=True)
 def rogers_tanimoto(x, y):
     num_not_equal = 0.0
     for i in range(x.shape[0]):
@@ -311,7 +313,7 @@ def rogers_tanimoto(x, y):
     return (2.0 * num_not_equal) / (x.shape[0] + num_not_equal)
 
 
-@numba.njit(fastmath=True, cache=True)
+@numba.njit(fastmath=True, cache=True, nogil=True)
 def russellrao(x, y):
     num_true_true = 0.0
     for i in range(x.shape[0]):
@@ -325,7 +327,7 @@ def russellrao(x, y):
         return float(x.shape[0] - num_true_true) / (x.shape[0])
 
 
-@numba.njit(fastmath=True, cache=True)
+@numba.njit(fastmath=True, cache=True, nogil=True)
 def sokal_michener(x, y):
     num_not_equal = 0.0
     for i in range(x.shape[0]):
@@ -336,7 +338,7 @@ def sokal_michener(x, y):
     return (2.0 * num_not_equal) / (x.shape[0] + num_not_equal)
 
 
-@numba.njit(fastmath=True, cache=True)
+@numba.njit(fastmath=True, cache=True, nogil=True)
 def sokal_sneath(x, y):
     num_true_true = 0.0
     num_not_equal = 0.0
@@ -352,7 +354,7 @@ def sokal_sneath(x, y):
         return num_not_equal / (0.5 * num_true_true + num_not_equal)
 
 
-@numba.njit(fastmath=True, cache=True)
+@numba.njit(fastmath=True, cache=True, nogil=True)
 def haversine(x, y):
     if x.shape[0] != 2:
         raise ValueError("haversine is only defined for 2 dimensional graph_data")
@@ -362,7 +364,7 @@ def haversine(x, y):
     return 2.0 * np.arcsin(result)
 
 
-@numba.njit(fastmath=True, cache=True)
+@numba.njit(fastmath=True, cache=True, nogil=True)
 def yule(x, y):
     num_true_true = 0.0
     num_true_false = 0.0
@@ -384,7 +386,7 @@ def yule(x, y):
         )
 
 
-@numba.njit(fastmath=True, cache=True)
+@numba.njit(fastmath=True, cache=True, nogil=True)
 def cosine(x, y):
     result = 0.0
     norm_x = 0.0
@@ -418,6 +420,7 @@ def cosine(x, y):
         "dim": numba.types.uint32,
         "i": numba.types.uint16,
     },
+    nogil=True
 )
 def alternative_cosine(x, y):
     result = 0.0
@@ -448,6 +451,7 @@ def alternative_cosine(x, y):
         "dim": numba.types.uint32,
         "i": numba.types.uint16,
     },
+    nogil=True
 )
 def dot(x, y):
     result = 0.0
@@ -475,6 +479,7 @@ def dot(x, y):
         "dim": numba.types.uint32,
         "i": numba.types.uint16,
     },
+    nogil=True
 )
 def alternative_dot(x, y):
     result = 0.0
@@ -488,12 +493,12 @@ def alternative_dot(x, y):
         return -np.log2(result)
 
 
-@numba.vectorize(fastmath=True)
+@numba.vectorize(fastmath=True, nogil=True)
 def correct_alternative_cosine(d):
     return 1.0 - pow(2.0, -d)
 
 
-@numba.njit(fastmath=True, cache=True)
+@numba.njit(fastmath=True, cache=True, nogil=True)
 def correlation(x, y):
     mu_x = 0.0
     mu_y = 0.0
@@ -539,6 +544,7 @@ def correlation(x, y):
         "dim": numba.types.uint32,
         "i": numba.types.uint16,
     },
+    nogil=True
 )
 def hellinger(x, y):
     result = 0.0
@@ -575,6 +581,7 @@ def hellinger(x, y):
         "dim": numba.types.uint32,
         "i": numba.types.uint16,
     },
+    nogil=True
 )
 def alternative_hellinger(x, y):
     result = 0.0
@@ -603,7 +610,7 @@ def correct_alternative_hellinger(d):
     return np.sqrt(1.0 - pow(2.0, -d))
 
 
-@numba.njit()
+@numba.njit(nogil=True)
 def rankdata(a, method="average"):
     arr = np.ravel(np.asarray(a))
     if method == "ordinal":
@@ -639,7 +646,7 @@ def rankdata(a, method="average"):
     return 0.5 * (count[dense] + count[dense - 1] + 1)
 
 
-@numba.njit(fastmath=True)
+@numba.njit(fastmath=True, nogil=True)
 def spearmanr(x, y):
     a = np.column_stack((x, y))
 

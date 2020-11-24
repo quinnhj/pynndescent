@@ -104,7 +104,7 @@ LeavingArcData = namedtuple(
 )
 
 # Just reproduce a simpler version of numpy isclose (not numba supported yet)
-@numba.njit()
+@numba.njit(nogil=True)
 def isclose(a, b, rtol=1.0e-5, atol=EPSILON):
     diff = np.abs(a - b)
     return diff <= (atol + rtol * np.abs(b))
@@ -112,7 +112,7 @@ def isclose(a, b, rtol=1.0e-5, atol=EPSILON):
 
 # locals: c, min, e, cnt, a
 # modifies _in_arc, _next_arc,
-@numba.njit(locals={"a": numba.uint32, "e": numba.uint32})
+@numba.njit(locals={"a": numba.uint32, "e": numba.uint32}, nogil=True)
 def find_entering_arc(
     pivot_block_size,
     pivot_next_arc,
@@ -194,7 +194,7 @@ def find_entering_arc(
 # Operates with graph (_source, _target) and MST (_succ_num, _parent, in_arc) data
 # locals: u, v
 # modifies: join
-@numba.njit(locals={"u": numba.types.uint16, "v": numba.types.uint16})
+@numba.njit(locals={"u": numba.types.uint16, "v": numba.types.uint16}, nogil=True)
 def find_join_node(source, target, succ_num, parent, in_arc):
     u = source[in_arc]
     v = target[in_arc]
@@ -224,6 +224,7 @@ def find_join_node(source, target, succ_num, parent, in_arc):
         "result": numba.uint8,
         "in_arc": numba.uint32,
     },
+    nogil=True
 )
 def find_leaving_arc(
     join,
@@ -305,6 +306,7 @@ def find_leaving_arc(
         "in_arc": numba.uint32,
         "val": numba.float64,
     },
+    nogil=True
 )
 def update_flow(
     join,
@@ -373,6 +375,7 @@ def update_flow(
         "par_stem": numba.uint16,
         "in_arc": numba.uint32,
     },
+    nogil=True
 )
 def update_spanning_tree(
     spanning_tree,
@@ -522,6 +525,7 @@ def update_spanning_tree(
     fastmath=True,
     inline="always",
     locals={"u": numba.uint16, "u_in": numba.uint16, "v_in": numba.uint16},
+    nogil=True
 )
 def update_potential(leaving_arc_data, pi, cost, spanning_tree):
 
@@ -548,7 +552,7 @@ def update_potential(leaving_arc_data, pi, cost, spanning_tree):
 
 # If we have mixed arcs (for better random access)
 # we need a more complicated function to get the ID of a given arc
-@numba.njit()
+@numba.njit(nogil=True)
 def arc_id(arc, graph):
     k = graph.n_arcs - arc - 1
     if graph.use_arc_mixing:
@@ -568,7 +572,7 @@ def arc_id(arc, graph):
 # Heuristic initial pivots
 # locals: curr, total, supply_nodes, demand_nodes, u
 # modifies:
-@numba.njit(locals={"i": numba.uint16})
+@numba.njit(locals={"i": numba.uint16}, nogil=True)
 def construct_initial_pivots(graph, node_arc_data, spanning_tree):
 
     cost = node_arc_data.cost
@@ -667,7 +671,7 @@ def construct_initial_pivots(graph, node_arc_data, spanning_tree):
     return True, in_arc
 
 
-@numba.njit()
+@numba.njit(nogil=True)
 def allocate_graph_structures(n, m, use_arc_mixing=True):
 
     # Size bipartite graph
@@ -745,7 +749,7 @@ def allocate_graph_structures(n, m, use_arc_mixing=True):
     return node_arc_data, spanning_tree, graph
 
 
-@numba.njit(locals={"u": numba.uint16, "e": numba.uint32})
+@numba.njit(locals={"u": numba.uint16, "e": numba.uint32}, nogil=True)
 def initialize_graph_structures(graph, node_arc_data, spanning_tree):
 
     n_nodes = graph.n_nodes
@@ -833,7 +837,7 @@ def initialize_graph_structures(graph, node_arc_data, spanning_tree):
     return True
 
 
-@numba.njit()
+@numba.njit(nogil=True)
 def initialize_supply(left_node_supply, right_node_supply, graph, supply):
     for n in range(graph.n_nodes):
         if n < graph.n:
@@ -842,19 +846,19 @@ def initialize_supply(left_node_supply, right_node_supply, graph, supply):
             supply[graph.n_nodes - n - 1] = right_node_supply[n - graph.n]
 
 
-@numba.njit(inline="always")
+@numba.njit(inline="always", nogil=True)
 def set_cost(arc, cost_val, cost, graph):
     cost[arc_id(arc, graph)] = cost_val
 
 
-@numba.njit(locals={"i": numba.uint16, "j": numba.uint16})
+@numba.njit(locals={"i": numba.uint16, "j": numba.uint16}, nogil=True)
 def initialize_cost(cost_matrix, graph, cost):
     for i in range(cost_matrix.shape[0]):
         for j in range(cost_matrix.shape[1]):
             set_cost(i * cost_matrix.shape[1] + j, cost_matrix[i, j], cost, graph)
 
 
-@numba.njit(fastmath=True, locals={"i": numba.uint32})
+@numba.njit(fastmath=True, locals={"i": numba.uint32}, nogil=True)
 def total_cost(flow, cost):
     c = 0.0
     for i in range(flow.shape[0]):

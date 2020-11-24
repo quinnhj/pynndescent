@@ -17,6 +17,7 @@ from scipy.sparse import (
 )
 
 import heapq
+import time
 
 import pynndescent.sparse as sparse
 import pynndescent.sparse_nndescent as sparse_nnd
@@ -64,7 +65,7 @@ FLOAT32_EPS = np.finfo(np.float32).eps
 EMPTY_GRAPH = make_heap(1, 1)
 
 
-@numba.njit(parallel=True)
+@numba.njit(parallel=True, nogil=True)
 def generate_leaf_updates(leaf_block, dist_thresholds, data, dist):
 
     updates = [[(-1, -1, np.inf)] for i in range(leaf_block.shape[0])]
@@ -92,7 +93,8 @@ def generate_leaf_updates(leaf_block, dist_thresholds, data, dist):
         "d": numba.float32,
         "p": numba.int32,
         "q": numba.int32,
-    }
+    },
+    nogil=True
 )
 def init_rp_tree(data, dist, current_graph, leaf_array):
 
@@ -142,7 +144,8 @@ def init_rp_tree(data, dist, current_graph, leaf_array):
 
 
 @numba.njit(
-    fastmath=True, locals={"d": numba.float32, "idx": numba.int32, "i": numba.int32}
+    fastmath=True, locals={"d": numba.float32, "idx": numba.int32, "i": numba.int32},
+    nogil=True
 )
 def init_random(n_neighbors, data, heap, dist, rng_state):
     for i in range(data.shape[0]):
@@ -158,7 +161,7 @@ def init_random(n_neighbors, data, heap, dist, rng_state):
     return
 
 
-@numba.njit()
+@numba.njit(nogil=True)
 def init_from_neighbor_graph(heap, indices, distances):
     for p in range(indices.shape[0]):
         for k in range(indices.shape[1]):
@@ -170,7 +173,7 @@ def init_from_neighbor_graph(heap, indices, distances):
     return
 
 
-@numba.njit(parallel=True)
+@numba.njit(parallel=True, nogil=True)
 def generate_graph_updates(
     new_candidate_block,
     old_candidate_block,
@@ -210,7 +213,7 @@ def generate_graph_updates(
     return updates
 
 
-@numba.njit()
+@numba.njit(nogil=True)
 def process_candidates(
     data,
     dist,
@@ -244,7 +247,7 @@ def process_candidates(
     return c
 
 
-@numba.njit()
+@numba.njit(nogil=True)
 def nn_descent_internal_low_memory_parallel(
     current_graph,
     data,
@@ -263,6 +266,9 @@ def nn_descent_internal_low_memory_parallel(
     for n in range(n_iters):
         if verbose:
             print("\t", n + 1, " / ", n_iters)
+        with numba.objmode():
+            # Call into object mode to temporarily sleep (and thus release GIL)
+            time.sleep(0.05)
 
         (new_candidate_neighbors, old_candidate_neighbors) = new_build_candidates(
             current_graph,
@@ -286,7 +292,7 @@ def nn_descent_internal_low_memory_parallel(
             return
 
 
-@numba.njit()
+@numba.njit(nogil=True)
 def nn_descent_internal_high_memory_parallel(
     current_graph,
     data,
@@ -310,6 +316,9 @@ def nn_descent_internal_high_memory_parallel(
     for n in range(n_iters):
         if verbose:
             print("\t", n + 1, " / ", n_iters)
+        with numba.objmode():
+            # Call into object mode to temporarily sleep (and thus release GIL)
+            time.sleep(0.05)
 
         (new_candidate_neighbors, old_candidate_neighbors) = new_build_candidates(
             current_graph,
@@ -342,7 +351,7 @@ def nn_descent_internal_high_memory_parallel(
             return
 
 
-@numba.njit()
+@numba.njit(nogil=True)
 def nn_descent(
     data,
     n_neighbors,
@@ -401,7 +410,7 @@ def nn_descent(
     return deheap_sort(current_graph)
 
 
-@numba.njit(parallel=True)
+@numba.njit(parallel=True, nogil=True)
 def diversify(indices, distances, data, dist, rng_state, prune_probability=1.0):
 
     for i in numba.prange(indices.shape[0]):
@@ -438,7 +447,7 @@ def diversify(indices, distances, data, dist, rng_state, prune_probability=1.0):
     return indices, distances
 
 
-@numba.njit(parallel=True)
+@numba.njit(parallel=True, nogil=True)
 def diversify_csr(
     graph_indptr,
     graph_indices,
@@ -481,7 +490,7 @@ def diversify_csr(
     return
 
 
-@numba.njit(parallel=True)
+@numba.njit(parallel=True, nogil=True)
 def degree_prune_internal(indptr, data, max_degree=20):
     for i in numba.prange(indptr.shape[0] - 1):
         row_data = data[indptr[i] : indptr[i + 1]]
@@ -838,7 +847,7 @@ class NNDescent(object):
 
                 dist_args = self._dist_args
 
-                @numba.njit()
+                @numba.njit(nogil=True)
                 def _partial_dist_func(ind1, data1, ind2, data2):
                     return _distance_func(
                         ind1,
@@ -1197,6 +1206,7 @@ class NNDescent(object):
                 "distance_bound": numba.types.float32,
                 "seed_scale": numba.types.float32,
             },
+            nogil=True
         )
         def search_closure(
             query_points,
@@ -1364,6 +1374,7 @@ class NNDescent(object):
                 "distance_scale": numba.types.float32,
                 "seed_scale": numba.types.float32,
             },
+            nogil=True
         )
         def search_closure(
             query_inds,
