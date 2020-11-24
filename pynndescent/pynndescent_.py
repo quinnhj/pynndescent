@@ -847,7 +847,7 @@ class NNDescent(object):
 
                 dist_args = self._dist_args
 
-                @numba.njit(nogil=True)
+                @numba.njit()
                 def _partial_dist_func(ind1, data1, ind2, data2):
                     return _distance_func(
                         ind1,

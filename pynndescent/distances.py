@@ -252,7 +252,7 @@ def alternative_jaccard(x, y):
         return -np.log2(num_equal / num_non_zero)
 
 
-@numba.vectorize(fastmath=True, nogil=True)
+@numba.vectorize(fastmath=True)
 def correct_alternative_jaccard(v):
     return 1.0 - pow(2.0, -v)
 
@@ -493,7 +493,7 @@ def alternative_dot(x, y):
         return -np.log2(result)
 
 
-@numba.vectorize(fastmath=True, nogil=True)
+@numba.vectorize(fastmath=True)
 def correct_alternative_cosine(d):
     return 1.0 - pow(2.0, -d)
 
