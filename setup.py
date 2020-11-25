@@ -8,7 +8,7 @@ def readme():
 
 configuration = {
     "name": "pynndescent",
-    "version": "0.5.1-sleep-debug",
+    "version": "0.5.1.1-aquarium",
     "description": "Nearest Neighbor Descent",
     "long_description": readme(),
     "classifiers": [
